@@ -1,5 +1,7 @@
 # SWE 573 Project
 
+This repository is created for the SWE 573 course project.
+
 ## About Me
 
 My name is Seda Güneş. I have a BSc degree in Mathematics
@@ -8,9 +10,24 @@ in Software Engineering at Boğaziçi University.
 
 ## Course
 
-This repository is created for the SWE 573 course project.
+**Course:** SWE 573  
+**Project:** SWE 573 Project
 
-## Repository
+## Repository Purpose
 
-This repository will be used for version control, issue
-tracking, documentation, and project development.
+This repository will be used for project development,
+version control, issue tracking, and documentation.
+
+## Project Status
+
+The project is currently in the requirements elicitation
+and planning stage.
+
+## Contents
+
+- Project documentation
+- Requirements
+- Requirements elicitation
+- GitHub Issues
+- Project roadmap
+- Source code
