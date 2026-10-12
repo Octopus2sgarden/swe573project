@@ -1,0 +1,18 @@
+/* Project styles on top of Pico CSS. Keep it simple (NFR-3.1). */
+#site-header nav {
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+#site-footer {
+  margin-top: 3rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--pico-muted-border-color);
+}
+
+.status-up {
+  color: var(--pico-ins-color);
+}
+
+.status-down {
+  color: var(--pico-del-color);
+}
