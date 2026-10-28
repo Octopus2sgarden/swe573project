@@ -3,6 +3,7 @@ package org.indigenouscrafts.platform.common;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.indigenouscrafts.platform.auth.InvalidCredentialsException;
 import org.indigenouscrafts.platform.auth.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -10,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.indigenouscrafts.platform.auth.InvalidCredentialsException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -33,5 +35,9 @@ public class ApiExceptionHandler {
                 HttpStatus.CONFLICT, ex.getMessage());
         problem.setProperty("field", ex.getField());
         return problem;
+    }
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 }
