@@ -16,3 +16,8 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+app:
+  jwt:
+    # Base64-encoded HMAC key, at least 32 bytes. Comes from .env, never committed.
+    secret: ${JWT_SECRET}
+    ttl: 1h
