@@ -15,10 +15,50 @@
 
   <main class="container">
     <h1>Log in</h1>
-    <p>Registration and login will be added in M2 (#30).</p>
+
+    <form x-data="loginForm()" @submit.prevent="submit">
+      <label>
+        Email
+        <input type="email" x-model="email" required autocomplete="email">
+      </label>
+      <label>
+        Password
+        <input type="password" x-model="password" required autocomplete="current-password">
+      </label>
+
+      <p x-show="error" x-text="error"></p>
+
+      <button type="submit" :aria-busy="loading" :disabled="loading">Log in</button>
+    </form>
   </main>
 
   <footer id="site-footer"></footer>
   <script src="/js/layout.js"></script>
+    <script>
+    function loginForm() {
+      return {
+        email: "",
+        password: "",
+        error: "",
+        loading: false,
+
+        async submit() {
+          this.error = "";
+          this.loading = true;
+          const res = await api.post("/auth/login", { email: this.email, password: this.password });
+          this.loading = false;
+
+          if (res.ok) {
+            console.log("token:", res.body.accessToken); // TODO: storage kararından sonra değişecek
+            window.location.href = "/";
+          } else if (res.status === 401) {
+            this.error = "Wrong Password. Please try again";
+          } else {
+            this.error = "Something went wrong. Please try again.";
+          }
+        }
+      };
+    }
+  </script>
 </body>
 </html>
