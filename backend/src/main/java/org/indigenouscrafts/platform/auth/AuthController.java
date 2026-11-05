@@ -8,6 +8,8 @@ import org.indigenouscrafts.platform.auth.dto.UserResponse;
 import org.indigenouscrafts.platform.user.AppUser;
 import org.indigenouscrafts.platform.user.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,9 +44,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@Valid @RequestBody LoginRequest request) {
-        return loginService.login(request);
-    }
+    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
+        TokenResponse token = loginService.login(request);
+
+        ResponseCookie cookie = ResponseCookie.from("access_token", token.accessToken())
+                .httpOnly(true)        
+                .secure(false)         
+                .sameSite("Strict")    
+                .path("/api")          
+                .maxAge(token.expiresIn())        
+                .build();
+
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
+    }   
 
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal Jwt jwt) {
