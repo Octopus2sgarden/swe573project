@@ -21,9 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpHeaders;
 
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    // Cookie name is shared with SecurityConfig, which reads the token from it.
+    public static final String AUTH_COOKIE = "access_token";
 
     private final RegistrationService registrationService;
     private final LoginService loginService;
@@ -46,19 +50,19 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
         TokenResponse token = loginService.login(request);
-
-        ResponseCookie cookie = ResponseCookie.from("access_token", token.accessToken())
-                .httpOnly(true)        
-                .secure(false)         
-                .sameSite("Strict")    
-                .path("/api")          
-                .maxAge(token.expiresIn())        
-                .build();
-
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, authCookie(token.accessToken(), token.expiresIn()).toString())
                 .build();
-    }   
+    }
+
+    // Logout = tell the browser to delete the cookie (same name + same path, Max-Age 0).
+    // JWT is stateless, so there is nothing to delete on the server side.
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, authCookie("", 0).toString())
+                .build();
+    }
 
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal Jwt jwt) {
@@ -66,5 +70,18 @@ public class AuthController {
         AppUser user = userService.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         return UserResponse.from(user);
+    }
+
+    // One place builds the cookie, so login and logout always use the same name and path.
+    // If the path differed, the browser would treat them as two different cookies
+    // and logout would not remove the login cookie.
+    private static ResponseCookie authCookie(String value, long maxAgeSeconds) {
+        return ResponseCookie.from(AUTH_COOKIE, value)
+                .httpOnly(true)       // JavaScript cannot read it (protects against XSS token theft)
+                .secure(false)        // TODO: true after HTTPS deployment (M6)
+                .sameSite("Strict")   // not sent on requests coming from other sites
+                .path("/api")         // only sent to the API, not to static pages
+                .maxAge(maxAgeSeconds)
+                .build();
     }
 }
