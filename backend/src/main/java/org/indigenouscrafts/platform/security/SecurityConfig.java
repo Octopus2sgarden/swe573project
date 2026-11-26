@@ -8,7 +8,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.util.WebUtils;
+import jakarta.servlet.http.Cookie;
+import org.indigenouscrafts.platform.auth.AuthController;
 
 @Configuration
 @EnableMethodSecurity
@@ -22,7 +27,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health", "/api/health", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
@@ -39,5 +44,24 @@ public class SecurityConfig {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authorities);
         return converter;
+    }
+    @Bean
+    BearerTokenResolver bearerTokenResolver() {
+        DefaultBearerTokenResolver headerResolver = new DefaultBearerTokenResolver();
+
+                return request -> {
+            // On public auth endpoints (login, register, logout) we ignore the cookie.
+            // Otherwise an expired cookie left in the browser would make Spring reject
+            // the request with 401 before login even runs. /me still needs the cookie.
+            String path = request.getRequestURI();
+            if (path.startsWith("/api/auth/") && !path.equals("/api/auth/me")) {
+                return null;
+            }
+            Cookie cookie = WebUtils.getCookie(request, AuthController.AUTH_COOKIE);
+            if (cookie != null && !cookie.getValue().isBlank()) {
+                return cookie.getValue();
+            }
+            return headerResolver.resolve(request);   // curl with a Bearer header still works
+        };
     }
 }

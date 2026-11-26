@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register · Indigenous Crafts Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <main class="container">
+    <h1>Register</h1>
+
+    <form x-data="registerForm()" @submit.prevent="submit">
+      <label>
+        Username
+        <input type="text" x-model="username" required autocomplete="username"
+               :aria-invalid="fieldErrors.username ? 'true' : null">
+        <small x-show="fieldErrors.username" x-text="fieldErrors.username"></small>
+      </label>
+      <label>
+        Email
+        <input type="email" x-model="email" required autocomplete="email"
+               :aria-invalid="fieldErrors.email ? 'true' : null">
+        <small x-show="fieldErrors.email" x-text="fieldErrors.email"></small>
+      </label>
+      <label>
+        Password
+        <input type="password" x-model="password" required minlength="8" maxlength="72"
+               autocomplete="new-password"
+               :aria-invalid="fieldErrors.password ? 'true' : null">
+        <small x-show="fieldErrors.password" x-text="fieldErrors.password"></small>
+      </label>
+
+      <p x-show="error" x-text="error"></p>
+
+      <button type="submit" :aria-busy="loading" :disabled="loading">Create account</button>
+    </form>
+
+    <p>Already have an account? <a href="/pages/login.html">Log in</a></p>
+  </main>
+
+  <footer id="site-footer"></footer>
+  <script src="/js/layout.js"></script>
+  <script>
+    function registerForm() {
+      return {
+        username: "",
+        email: "",
+        password: "",
+        error: "",
+        fieldErrors: {},
+        loading: false,
+
+        async submit() {
+          this.error = "";
+          this.fieldErrors = {};
+          this.loading = true;
+          const res = await api.post("/auth/register", {
+            username: this.username,
+            email: this.email,
+            password: this.password,
+          });
+          this.loading = false;
+
+          if (res.ok) {
+            // 201 Created. Registration does not log the user in, so go to the login page.
+            window.location.href = "/pages/login.html";
+          } else if (res.status === 400 && res.body && res.body.errors) {
+            // Validation errors from ApiExceptionHandler: { errors: { field: message } }
+            this.fieldErrors = res.body.errors;
+          } else if (res.status === 409 && res.body) {
+            // Username or email already taken: { field: "email", detail: "..." }
+            this.fieldErrors = { [res.body.field]: res.body.detail };
+          } else {
+            this.error = "Something went wrong. Please try again.";
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>
