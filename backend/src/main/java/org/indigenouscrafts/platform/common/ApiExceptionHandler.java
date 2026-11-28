@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.indigenouscrafts.platform.ontology.InvalidTermException;
 import org.indigenouscrafts.platform.ontology.TermAlreadyExistsException;
+import org.indigenouscrafts.platform.craft.InvalidCraftException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -51,6 +52,12 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(InvalidTermException.class)
     public ProblemDetail handleInvalidTerm(InvalidTermException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setProperty("field", ex.getField());
+        return problem;
+    }
+    @ExceptionHandler(InvalidCraftException.class)
+    public ProblemDetail handleInvalidCraft(InvalidCraftException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setProperty("field", ex.getField());
         return problem;
