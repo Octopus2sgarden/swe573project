@@ -17,7 +17,7 @@ import org.hibernate.type.SqlTypes;
 /**
  * One term of the controlled vocabulary, stored in {@code ontology_term} (V3).
  * All seven vocabularies share this table; {@link #vocabulary} says which one.
- * Terms are seeded by migrations and admins (#55); users only pick them.
+ * Terms come from the seed (V4) and from users, who can add them directly (#55).
  */
 @Entity
 @Table(name = "ontology_term")
@@ -70,8 +70,32 @@ public class OntologyTerm {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
+    // Who added the term (V5). NULL for seeded terms. We keep only the id:
+    // nothing here needs the whole user, and an admin can look the user up later.
+    @Column(name = "created_by")
+    private Long createdById;
+
     /** Required by JPA. */
     protected OntologyTerm() {
+    }
+
+    /** A term a user adds from the craft form. The service has already checked the values. */
+    public static OntologyTerm createdByUser(Vocabulary vocabulary, String slug, String label,
+            String localName, String definition, OntologyTerm parent, String colorHex,
+            Integer yearFrom, Integer yearTo, int sortOrder, Long createdById) {
+        OntologyTerm term = new OntologyTerm();
+        term.vocabulary = vocabulary;
+        term.slug = slug;
+        term.label = label;
+        term.localName = localName;
+        term.definition = definition;
+        term.parent = parent;
+        term.colorHex = colorHex;
+        term.yearFrom = yearFrom;
+        term.yearTo = yearTo;
+        term.sortOrder = sortOrder;
+        term.createdById = createdById;
+        return term;
     }
 
     public Long getId() { return id; }
@@ -87,4 +111,5 @@ public class OntologyTerm {
     public Integer getYearFrom() { return yearFrom; }
     public Integer getYearTo() { return yearTo; }
     public int getSortOrder() { return sortOrder; }
+    public Long getCreatedById() { return createdById; }
 }
