@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import jakarta.validation.Valid;
 
-/** Read-only endpoints for the vocabularies, used by the pickers on the craft form. */
+/** Endpoints for the vocabularies, used by the pickers on the craft form. */
 @RestController
 @RequestMapping("/api")
 public class OntologyController {
