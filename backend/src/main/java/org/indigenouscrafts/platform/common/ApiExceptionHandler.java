@@ -11,6 +11,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.indigenouscrafts.platform.ontology.InvalidTermException;
+import org.indigenouscrafts.platform.ontology.TermAlreadyExistsException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -38,5 +40,19 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+    // 409: the form can then select the existing term instead of adding a copy.
+    @ExceptionHandler(TermAlreadyExistsException.class)
+    public ProblemDetail handleTermExists(TermAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setProperty("existingId", ex.getExistingId());
+        return problem;
+    }
+
+    @ExceptionHandler(InvalidTermException.class)
+    public ProblemDetail handleInvalidTerm(InvalidTermException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setProperty("field", ex.getField());
+        return problem;
     }
 }

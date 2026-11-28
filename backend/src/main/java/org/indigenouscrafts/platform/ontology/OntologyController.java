@@ -7,6 +7,15 @@ import org.indigenouscrafts.platform.ontology.dto.TermNode;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.indigenouscrafts.platform.ontology.dto.CreateTermRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import jakarta.validation.Valid;
 
 /** Read-only endpoints for the vocabularies, used by the pickers on the craft form. */
 @RestController
@@ -52,5 +61,13 @@ public class OntologyController {
     @GetMapping("/periods")
     public List<TermNode> periods() {
         return ontologyService.tree(Vocabulary.PERIOD);
+    }
+    // Any logged-in user can add a term (no approval). The user id comes from the
+    // JWT, like in AuthController.me(), never from the request body.
+    @PostMapping("/terms")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TermNode create(@Valid @RequestBody CreateTermRequest request,
+                           @AuthenticationPrincipal Jwt jwt) {
+        return ontologyService.create(request, Long.valueOf(jwt.getSubject()));
     }
 }
